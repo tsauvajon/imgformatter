@@ -78,7 +78,7 @@ func convertAndResize(file os.FileInfo, messages chan string) error {
 		return err
 	}
 
-	if format != "jpeg" {
+	if format != "jpeg" && format != "png" {
 		err := errors.New("Unkown format: " + format)
 		fmt.Println(err)
 		return err
@@ -133,6 +133,11 @@ func compress(file os.FileInfo, messages chan string) error {
 	return err
 }
 
-func pngFileName(jpgFileName string) string {
-	return strings.Replace(jpgFileName, ".jpg", ".png", -1)
+func pngFileName(filename string) string {
+	filename = strings.Replace(filename, ".jpg", ".png", -1)
+	filename = strings.Replace(filename, ".JPG", ".png", -1)
+	filename = strings.Replace(filename, ".jpeg", ".png", -1)
+	filename = strings.Replace(filename, ".JPEG", ".png", -1)
+	filename = strings.Replace(filename, ".PNG", ".png", -1)
+	return filename
 }
