@@ -1,5 +1,5 @@
 # Binaries for programs and plugins
-jpgtopng.exe
+imgformatter.exe
 *.dll
 *.so
 *.dylib
