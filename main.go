@@ -14,16 +14,21 @@ import (
 	"strings"
 
 	"github.com/nfnt/resize"
+	"github.com/oliamb/cutter"
 )
 
 func main() {
 
 	var (
-		heightPtr, widthPtr *int
+		heightPtr, widthPtr         *int
+		cropHeightPtr, cropWidthPtr *int
 	)
 
-	heightPtr = flag.Int("height", 500, "height of the resized picture")
-	widthPtr = flag.Int("width", 320, "width of the resized picture")
+	heightPtr = flag.Int("height", 500, "maximum height of the resized picture")
+	widthPtr = flag.Int("width", 320, "maximum width of the resized picture")
+
+	cropHeightPtr = flag.Int("cropheight", 0, "cropped height of the picture")
+	cropWidthPtr = flag.Int("cropwidth", 0, "cropped width of the picture")
 
 	flag.Parse()
 
@@ -39,7 +44,7 @@ func main() {
 
 	// Resize concurrently
 	for _, file := range files {
-		go convertAndResize(file, uint(*widthPtr), uint(*heightPtr), messages)
+		go convertAndResize(file, uint(*widthPtr), uint(*heightPtr), *cropWidthPtr, *cropHeightPtr, messages)
 	}
 
 	for range files {
@@ -72,7 +77,11 @@ func main() {
 	fmt.Scanln()
 }
 
-func convertAndResize(file os.FileInfo, width, height uint, messages chan string) error {
+func convertAndResize(file os.FileInfo, width, height uint, cropWidth, cropHeight int, messages chan string) error {
+	var (
+		frs *os.File
+	)
+
 	// open
 	f, err := os.Open("./in/" + file.Name())
 
@@ -101,6 +110,19 @@ func convertAndResize(file os.FileInfo, width, height uint, messages chan string
 
 	newFileName := pngFileName(file.Name())
 
+	var croppedImg image.Image
+
+	// crop
+	shouldCropImage := cropWidth > 0 && cropHeight > 0
+
+	if shouldCropImage {
+		croppedImg, err = cutter.Crop(resized, cutter.Config{
+			Width:  cropWidth,
+			Height: cropHeight,
+			Mode:   cutter.Centered,
+		})
+	}
+
 	// create
 	f, err = os.Create("./out/" + newFileName)
 
@@ -109,7 +131,7 @@ func convertAndResize(file os.FileInfo, width, height uint, messages chan string
 		return err
 	}
 
-	frs, err := os.Create("./resized/" + newFileName)
+	frs, err = os.Create("./resized/" + newFileName)
 
 	if err != nil {
 		log.Fatal("Error creating the file: ", err)
@@ -124,7 +146,11 @@ func convertAndResize(file os.FileInfo, width, height uint, messages chan string
 		return err
 	}
 
-	err = png.Encode(frs, resized)
+	if shouldCropImage {
+		err = png.Encode(frs, croppedImg)
+	} else {
+		err = png.Encode(frs, resized)
+	}
 
 	if err != nil {
 		log.Fatal("Error encoding the file: ", err)
