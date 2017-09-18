@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -16,6 +17,16 @@ import (
 )
 
 func main() {
+
+	var (
+		heightPtr, widthPtr *int
+	)
+
+	heightPtr = flag.Int("height", 500, "height of the resized picture")
+	widthPtr = flag.Int("width", 320, "width of the resized picture")
+
+	flag.Parse()
+
 	files, err := ioutil.ReadDir("./in")
 
 	messages := make(chan string, len(files))
@@ -28,7 +39,7 @@ func main() {
 
 	// Resize concurrently
 	for _, file := range files {
-		go convertAndResize(file, messages)
+		go convertAndResize(file, uint(*widthPtr), uint(*heightPtr), messages)
 	}
 
 	for range files {
@@ -61,7 +72,7 @@ func main() {
 	fmt.Scanln()
 }
 
-func convertAndResize(file os.FileInfo, messages chan string) error {
+func convertAndResize(file os.FileInfo, width, height uint, messages chan string) error {
 	// open
 	f, err := os.Open("./in/" + file.Name())
 
@@ -85,7 +96,8 @@ func convertAndResize(file os.FileInfo, messages chan string) error {
 	}
 
 	// resize
-	resized := resize.Resize(0, 160, t, resize.Lanczos3)
+	// resized := resize.Resize(width, height, t, resize.Lanczos3)
+	resized := resize.Thumbnail(width, height, t, resize.Lanczos3)
 
 	newFileName := pngFileName(file.Name())
 
