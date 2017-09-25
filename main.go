@@ -5,8 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"image"
-	_ "image/jpeg"
-	"image/png"
+	"image/jpeg"
+	_ "image/png"
 	"io/ioutil"
 	"log"
 	"os"
@@ -139,7 +139,7 @@ func convertAndResize(file os.FileInfo, width, height uint, cropWidth, cropHeigh
 	}
 
 	// encode
-	err = png.Encode(f, t)
+	err = jpeg.Encode(f, t, nil)
 
 	if err != nil {
 		log.Fatal("Error encoding the file: ", err)
@@ -147,9 +147,9 @@ func convertAndResize(file os.FileInfo, width, height uint, cropWidth, cropHeigh
 	}
 
 	if shouldCropImage {
-		err = png.Encode(frs, croppedImg)
+		err = jpeg.Encode(frs, croppedImg, nil)
 	} else {
-		err = png.Encode(frs, resized)
+		err = jpeg.Encode(frs, resized, nil)
 	}
 
 	if err != nil {
@@ -172,10 +172,10 @@ func compress(file os.FileInfo, messages chan string) error {
 }
 
 func pngFileName(filename string) string {
-	filename = strings.Replace(filename, ".jpg", ".png", -1)
-	filename = strings.Replace(filename, ".JPG", ".png", -1)
-	filename = strings.Replace(filename, ".jpeg", ".png", -1)
-	filename = strings.Replace(filename, ".JPEG", ".png", -1)
-	filename = strings.Replace(filename, ".PNG", ".png", -1)
+	filename = strings.Replace(filename, ".jpg", ".jpg", -1)
+	filename = strings.Replace(filename, ".JPG", ".jpg", -1)
+	filename = strings.Replace(filename, ".jpeg", ".jpg", -1)
+	filename = strings.Replace(filename, ".JPEG", ".jpg", -1)
+	filename = strings.Replace(filename, ".PNG", ".jpg", -1)
 	return filename
 }
